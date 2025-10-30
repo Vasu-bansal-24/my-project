@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: '20'
 
-      # Step 3: Install dependencies and build React app
+      # Step 3: Install dependencies build React app
       - name: Install dependencies and build
         run: |
           npm ci
