@@ -1,4 +1,4 @@
-name: Test Workflow
+name: Build React Project
 
 on:
   push:
@@ -10,51 +10,55 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Simple test
+      - name: List repository structure
         run: |
-          echo "Workflow is working!"
-          echo "Repository structure:"
+          echo "Repository root contents:"
           ls -la
-          
+          echo "React project contents:"
+          ls -la react-project/
+          echo "Exp-3.1 contents:"
+          ls -la react-project/Exp-3.1/
+
   build-react:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'react-project/') || github.event_name == 'workflow_dispatch'
+    needs: test
     
-    defaults:
-      run:
-        working-directory: react-project/Exp-3.1
-        
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
-      - name: Check if React project exists
-        run: |
-          echo "Checking if react project exists..."
-          if [ -f "package.json" ]; then
-            echo "package.json found!"
-            cat package.json
-          else
-            echo "package.json not found in react-project/Exp-3.1"
-            echo "Current directory contents:"
-            ls -la
-          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'react-project/Exp-3.1/package-lock.json'
 
-      - name: Install dependencies and build
+      - name: Navigate and verify React project
         run: |
-          if [ -f "package.json" ]; then
-            npm ci
-            npm run build
-          else
-            echo "Skipping npm install - no package.json found"
-          fi
+          cd react-project/Exp-3.1
+          echo "Current directory: $(pwd)"
+          echo "Files in directory:"
+          ls -la
+          echo "Package.json content:"
+          cat package.json
+
+      - name: Install dependencies
+        run: |
+          cd react-project/Exp-3.1
+          npm ci
+
+      - name: Build React app
+        run: |
+          cd react-project/Exp-3.1
+          npm run build
+          
+      - name: Verify build output
+        run: |
+          cd react-project/Exp-3.1
+          echo "Build completed. Contents of dist folder:"
+          ls -la dist/
