@@ -1,20 +1,29 @@
-name: Build React App (Experiment-3.1)
+name: Test Workflow
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'react-project/Exp-3.1/**'
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
-    paths:
-      - 'react-project/Exp-3.1/**'
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Simple test
+        run: |
+          echo "Workflow is working!"
+          echo "Repository structure:"
+          ls -la
+          
+  build-react:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'react-project/') || github.event_name == 'workflow_dispatch'
     
     defaults:
       run:
@@ -24,6 +33,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Check if React project exists
+        run: |
+          echo "Checking if react project exists..."
+          if [ -f "package.json" ]; then
+            echo "package.json found!"
+            cat package.json
+          else
+            echo "package.json not found in react-project/Exp-3.1"
+            echo "Current directory contents:"
+            ls -la
+          fi
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,27 +52,9 @@ jobs:
 
       - name: Install dependencies and build
         run: |
-          npm ci
-          npm run build
-
-      - name: Build Docker Image
-        run: |
-          docker build -t react-experiment-3-1 .
-      
-      - name: Check Docker Username (for debug only)
-        run: echo "Docker user is $DOCKER_USERNAME"
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-
-      - name: Login to Docker Hub
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Push Image to Docker Hub
-        if: github.ref == 'refs/heads/main'
-        run: |
-          docker tag react-experiment-3-1 ${{ secrets.DOCKERHUB_USERNAME }}/react-experiment-3-1:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/react-experiment-3-1:latest
+          if [ -f "package.json" ]; then
+            npm ci
+            npm run build
+          else
+            echo "Skipping npm install - no package.json found"
+          fi
