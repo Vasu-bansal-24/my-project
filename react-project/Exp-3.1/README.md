@@ -1,6 +1,9 @@
-# React + Vite
+# React + Vite - Experiment 3.1
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+## Product Card Demo
+This experiment demonstrates React components and props with a simple product card display.
 
 Currently, two official plugins are available:
 
